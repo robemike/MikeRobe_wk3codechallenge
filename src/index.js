@@ -1,3 +1,5 @@
+// This function fetches movie data from the server using the Fetch
+
 function fetchMovie() {
     fetch("http://localhost:3000/films")
         .then(response => {
@@ -35,32 +37,46 @@ function fetchMovie() {
 
 fetchMovie();
 
-// const parent = document.getElementById("films");
-// const child = document.getElementsByClassName("film item");
-// parent.removeChild(child); 
-// Why is this not working ??
-
-// const ListOfFilms = document.getElementById("films");
-// const placeHolder = ListOfFilms.querySelector(".film.item");
-// if (placeHolder) {
-//     placeHolder.remove();
-// }
+// This function is responsible for dynamically populating a list of films and their corresponding delete buttons.
 function populateMovieList() {
-    // const filmsList = document.getElementById("films");
-
-    // Remove placeholder li
+    
+// Select an element by its id and assign is a variable listOfFilms
+    
     const listOfFilms = document.getElementById("films");
+    // It removes any placeholder film item from the list.
     const placeHolder = listOfFilms.querySelector(".film.item");
     if (placeHolder) {
         placeHolder.remove();
     }
 
     // Add movie title list items
-    theMovieTitles.forEach(title => {
+    theMovieTitles.forEach((title, index) => {
         const li = document.createElement("li");
         li.classList.add("film", "item");
         li.textContent = title;
         listOfFilms.appendChild(li);
+
+        const deleteButton = document.createElement("button");
+        deleteButton.classList.add("ui", "red", "button", "delete-button");
+        deleteButton.textContent = "Delete";
+        listOfFilms.appendChild(deleteButton);
+
+        deleteButton.addEventListener("click", () => {
+            fetch(`http://localhost:3000/films/${index}`, {
+                    method: "DELETE"
+                })
+                .then(response => {
+                    if (response.ok) {
+                        listOfFilms.removeChild(li);
+                    } else {
+                        console.log("Error deleting film from the server")
+                    }
+                })
+                .catch(error => {
+                    console.log("Error deleting film from the server", error);
+                });
+        });
+        
     });
 }
 
@@ -83,14 +99,10 @@ const theMovieTitles = [
 ];
 
 
-
-
-
-
+// There is an event listener added to the "Buy Ticket" button, which decrements the number of available tickets displayed on the page when clicked.
 document.addEventListener("DOMContentLoaded", function () {
     const buyTicket = document.getElementById("buy-ticket");
     const ticketNum = document.getElementById("ticket-num");
-    const filmsList = document.getElementById("films");
 
     buyTicket.addEventListener("click", function () {
 
@@ -106,66 +118,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-
-
-
-
-
-
-
-
-// Execute function when page loads
 window.addEventListener("DOMContentLoaded", () => {
     populateMovieList();
 });
-
-
-
-
-
-// document.addEventListener("DOMContentLoaded", function() {
-//     const filmsList = document.getElementById("films");
-
-//     function renderFilms(films) {
-//       films.forEach(film => {
-//           const listItem = document.createElement("li");
-//         listItem.className = "film item";
-//         listItem.textContent = film.title;
-
-//         const deleteButton = document.createElement("button");
-//         deleteButton.textContent = "Delete";
-//         deleteButton.className = "ui red button delete-btn";
-
-//         deleteButton.addEventListener("click", function() {
-
-//           listItem.remove();
-
-//           fetch(`http://localhost:3000/films`, {
-//             method: "DELETE"
-//           })
-//           .then(response => {
-//             if (!response.ok) {
-//               throw new Error("Failed to delete film");
-//             }
-
-//           })
-//           .catch(error => {
-//             console.error("Error deleting film:", error);
-//           });
-//         });
-
-//         listItem.appendChild(deleteButton);
-
-
-//         filmsList.appendChild(listItem);
-//       });
-//     }
-
-
-//     const filmsData = [
-
-//     ];
-
-
-//     renderFilms(filmsData);
-//   });
