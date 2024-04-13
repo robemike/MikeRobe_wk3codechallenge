@@ -1,123 +1,103 @@
-// This function fetches movie data from the server using the Fetch
+let url = "http://localhost:3000/films";
 
-function fetchMovie() {
-    fetch("http://localhost:3000/films")
+displayTitles();
+
+function displayTitles() {
+    fetch(url)
         .then(response => {
             if (!response.ok) {
-                throw new Error("Network response is not Ok");
+                throw new Error('Network response was not ok.');
             }
             return response.json();
-        }).then(movieData => {
-            const films = movieData[0]
-            const poster = document.getElementById("poster");
-            poster.src = films.poster;
-
-            const title = document.getElementById("title");
-            title.textContent = films.title;
-
-            const runtime = document.getElementById("runtime");
-            runtime.textContent = films.runtime + "minutes";
-
-            const showTime = document.getElementById("showtime");
-            showTime.textContent = films.showtime;
-
-            const capacity = films.capacity
-            const ticketsSold = films.tickets_sold
-
-            const remTickets = document.getElementById("ticket-num");
-            remTickets.textContent = capacity - ticketsSold;
-
-            const descripton = document.getElementById("film-info");
-            descripton.textContent = films.description;
+        })
+        .then(data => {
+            const filmsList = document.getElementById("films");
+            filmsList.innerHTML = '';
+            data.forEach(movie => {
+                const button = document.createElement("button");
+                button.textContent = 'DELETE';
+                button.addEventListener('click', function () {
+                    deleteFilm(movie.id);
+                    removeFilmFromList(movie.id);
+                });
+                const li = document.createElement("li");
+                li.className = "film item";
+                li.setAttribute('data-id', movie.id); // Set data-id attribute
+                li.innerHTML = movie.title;
+                li.addEventListener('click', function () {
+                    changePoster(movie.poster);
+                    changeFilmTitle(movie.title);
+                    changeFilmDescription(movie.description);
+                    changeFilmShowtime(movie.showtime);
+                    changeFilmRuntime(movie.runtime);
+                    updateRemainingTickets(movie.capacity - movie.tickets_sold);
+                });
+                filmsList.appendChild(li);
+                filmsList.appendChild(button);
+            });
         })
         .catch(error => {
-            console.log("Error fetching movie data:", error);
-        })
+            console.error('Error fetching or parsing data:', error);
+        });
 }
 
-fetchMovie();
-
-// This function is responsible for dynamically populating a list of films and their corresponding delete buttons.
-function populateMovieList() {
-    
-// Select an element by its id and assign is a variable listOfFilms
-    
-    const listOfFilms = document.getElementById("films");
-    // It removes any placeholder film item from the list.
-    const placeHolder = listOfFilms.querySelector(".film.item");
-    if (placeHolder) {
-        placeHolder.remove();
-    }
-
-    // Add movie title list items
-    theMovieTitles.forEach((title, index) => {
-        const li = document.createElement("li");
-        li.classList.add("film", "item");
-        li.textContent = title;
-        listOfFilms.appendChild(li);
-
-        const deleteButton = document.createElement("button");
-        deleteButton.classList.add("ui", "red", "button", "delete-button");
-        deleteButton.textContent = "Delete";
-        listOfFilms.appendChild(deleteButton);
-
-        deleteButton.addEventListener("click", () => {
-            fetch(`http://localhost:3000/films/${index}`, {
-                    method: "DELETE"
-                })
-                .then(response => {
-                    if (response.ok) {
-                        listOfFilms.removeChild(li);
-                    } else {
-                        console.log("Error deleting film from the server")
-                    }
-                })
-                .catch(error => {
-                    console.log("Error deleting film from the server", error);
-                });
-        });
-        
+function deleteFilm(id) {
+    fetch(`${url}/${id}`, {
+        method: 'DELETE'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to delete film');
+        }
+        console.log('Film deleted successfully');
+    })
+    .catch(error => {
+        console.error('Error deleting film:', error);
     });
 }
 
-const theMovieTitles = [
-    "The Giant Gila Monster",
-    "Manos: The Hands Of Fate",
-    "Time Chasers",
-    "The Touch Of Satan",
-    "Santa Claus Conquers The Martians",
-    "Track Of The Moon Beast",
-    "The Skydivers",
-    "The Killer Shrews",
-    "Project Moon Base",
-    "The Giant Spider Invasion",
-    "Catalina Caper",
-    "Secret Agent Super Dragon",
-    "Wild Rebels",
-    "Danger: Diabolik",
-    "Village Of The Giants",
-];
+function removeFilmFromList(id) {
+    const filmToRemove = document.querySelector(`li[data-id="${id}"]`);
+    if (filmToRemove) {
+        filmToRemove.remove();
+    }
+}
 
+function changePoster(posterUrl) {
+    const posterImg = document.getElementById("poster");
+    posterImg.src = posterUrl;
+}
 
-// There is an event listener added to the "Buy Ticket" button, which decrements the number of available tickets displayed on the page when clicked.
-document.addEventListener("DOMContentLoaded", function () {
-    const buyTicket = document.getElementById("buy-ticket");
-    const ticketNum = document.getElementById("ticket-num");
+function changeFilmTitle(title) {
+    const titleElement = document.getElementById("title");
+    titleElement.textContent = title;
+}
 
-    buyTicket.addEventListener("click", function () {
+function changeFilmDescription(description) {
+    const filmInfoElement = document.getElementById("film-info");
+    filmInfoElement.textContent = description;
+}
 
-        let availableTickets = parseInt(ticketNum.textContent);
-        if (availableTickets > 0) {
-            availableTickets--
-            ticketNum.textContent = availableTickets;
+function changeFilmShowtime(showtime) {
+    const showtimeElement = document.getElementById("showtime");
+    showtimeElement.textContent = showtime;
+}
+
+function changeFilmRuntime(runtime) {
+    const runtimeElement = document.getElementById("runtime");
+    runtimeElement.textContent = `${runtime} minutes`;
+}
+
+function updateRemainingTickets(remTickets) {
+    const buyTicketButton = document.getElementById("buy-ticket");
+    const remainingTickets = document.getElementById("ticket-num");
+
+    remainingTickets.innerHTML = `There are: ${remTickets }`
+    buyTicketButton.addEventListener("click", function () {
+        if (remTickets >= 0) {
+            remainingTickets.textContent = `There are: ${remTickets --}`
         } else {
             alert("Sorry, all the tickets are sold out!");
         }
-    });
-});
-
-
-
-window.addEventListener("DOMContentLoaded", () => {
-    populateMovieList();
-});
+    })
+}
